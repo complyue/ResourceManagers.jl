@@ -46,82 +46,75 @@ end
 ```
 """
 macro with(pairs, block)
-  resource_exprs = []
-  as_vars = []
+  resource_pairs = []
 
   if pairs.head == :block  # Multiple resources
     for pair in filter(x -> isa(x, Expr), pairs.args)  # Only keep Expr objects
       if pair.head == :call && pair.args[1] == :(:)
-        push!(resource_exprs, pair.args[2])
-        push!(as_vars, pair.args[3])
+        push!(resource_pairs, (pair.args[2], pair.args[3]))
       elseif pair.head == :symbol || pair.head == :call || pair.head == :macrocall
-        push!(resource_exprs, pair)
-        push!(as_vars, nothing)
+        push!(resource_pairs, (pair, nothing))
       else
         throw(ArgumentError("Invalid syntax. Expected assignments (resource : variable)"))
       end
     end
   else  # Single resource
     if pairs.head == :call && pairs.args[1] == :(:)
-      push!(resource_exprs, pairs.args[2])
-      push!(as_vars, pairs.args[3])
+      push!(resource_pairs, (pairs.args[2], pairs.args[3]))
     elseif pairs.head == :symbol || pairs.head == :call || pairs.head == :macrocall
-      push!(resource_exprs, pairs)
-      push!(as_vars, nothing)
+      push!(resource_pairs, (pairs, nothing))
     else
       throw(ArgumentError("Invalid syntax. Expected assignments (resource : variable)"))
     end
   end
 
-  # Assume generate_with_block is defined to generate the final code block
-  final_block = generate_with_block(resource_exprs, as_vars, block)
+  final_block = generate_with_block(resource_pairs, block)
   esc(final_block)
 end
 
 """
-    generate_with_block(resources, as_vars, block)
+    generate_with_block(resource_pairs, block)
 
 Generates a code block for resource management.
 This function is internal and used by the `@with` macro.
 """
-function generate_with_block(resources, as_vars, block)
-  if isempty(resources)
+function generate_with_block(resource_pairs, block)
+  if isempty(resource_pairs)
     return block
   end
 
-  resource = popfirst!(resources)
-  as_var = popfirst!(as_vars)
+  (resource, as_var) = popfirst!(resource_pairs)
   resource_var = gensym()  # Generate a unique symbol for the resource
-  inner_block = generate_with_block(resources, as_vars, block)
+  inner_block = generate_with_block(resource_pairs, block)
 
   if as_var === nothing
     return quote
-      local exc = nothing  # Variable to store any caught exception
-      local $resource_var = $resource  # Store the resource expression result
+      local exc = nothing
+      local $resource_var = $resource
       local entered_resource = __enter__($resource_var)
       try
         $inner_block
       catch e
-        exc = e  # Store the caught exception
+        exc = e
       finally
-        __exit__($resource_var, exc)  # Execute __exit__ function
-        if exc !== nothing  # Re-throw the exception if one was caught
+        __exit__($resource_var, exc)
+        if exc !== nothing
           throw(exc)
         end
       end
     end
   else
     return quote
-      local exc = nothing  # Variable to store any caught exception
-      local $resource_var = $resource  # Store the resource expression result
+      local exc = nothing
+      local $resource_var = $resource
       local $as_var = __enter__($resource_var)
       try
         $inner_block
       catch e
-        exc = e  # Store the caught exception
+        exc = e
       finally
-        __exit__($resource_var, exc)  # Execute __exit__ function
-        if exc !== nothing  # Re-throw the exception if one was caught
+        __exit__($resource_var, exc)
+        if exc !== nothing
           throw(exc)
         end
       end
