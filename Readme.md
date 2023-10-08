@@ -73,9 +73,9 @@ end begin
 end
 ```
 
-### Implementing Your Own `ResourceManagers`
+### Implementing Your Own `ResourceManager`
 
-Implementing your own `ResourceManagers` is straightforward:
+Implementing your own `ResourceManager` is straightforward:
 
 1. Define your custom type.
 2. Add methods for `__enter__` and `__exit__` that describe how to acquire and release the resource.
