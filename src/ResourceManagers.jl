@@ -89,8 +89,8 @@ function generate_with_block(resources, as_vars, block)
     return block
   end
 
-  resource = pop!(resources)
-  as_var = pop!(as_vars)
+  resource = popfirst!(resources)
+  as_var = popfirst!(as_vars)
   resource_var = gensym()  # Generate a unique symbol for the resource
   inner_block = generate_with_block(resources, as_vars, block)
 
@@ -114,9 +114,8 @@ function generate_with_block(resources, as_vars, block)
     return quote
       local exc = nothing  # Variable to store any caught exception
       local $resource_var = $resource  # Store the resource expression result
-      local entered_resource = __enter__($resource_var)
+      local $as_var = __enter__($resource_var)
       try
-        local $as_var = entered_resource
         $inner_block
       catch e
         exc = e  # Store the caught exception

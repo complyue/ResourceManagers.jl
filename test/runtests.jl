@@ -77,3 +77,32 @@ end
     @test r1 == "Resource 1"
   end
 end
+
+@testset "Test resource acquisition/release order" begin
+  resource_order = []
+
+  struct DummyResource <: ResourceManager
+    name::String
+  end
+
+  function __enter__(r::DummyResource)
+    push!(resource_order, "Acquired: $(r.name)")
+    return r
+  end
+
+  function __exit__(r::DummyResource, exc::Union{Nothing,Exception})
+    push!(resource_order, "Released: $(r.name)")
+  end
+
+  r1 = DummyResource("Resource 1")
+  r2 = DummyResource("Resource 2")
+
+  @with begin
+    r1:r1_handle
+    r2:r2_handle
+  end begin
+    # Perform operations with resources if needed
+  end
+
+  @test resource_order == ["Acquired: Resource 1", "Acquired: Resource 2", "Released: Resource 2", "Released: Resource 1"]
+end
