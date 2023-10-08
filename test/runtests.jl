@@ -1,6 +1,7 @@
 using Test
 using ResourceManagers
 
+
 # Define mock resource types for testing
 struct DummyResource1
   name::String
@@ -28,6 +29,7 @@ end
 function __exit__(resource::DummyResource2, exc::Union{Nothing,Exception})
   println("Exiting resource: ", resource.name)
 end
+
 
 # Tests
 
@@ -78,7 +80,7 @@ end
   end
 end
 
-@testset "Test resource acquisition/release order" begin
+@testset "Resource acquisition/release order" begin
   resource_order = []
 
   struct DummyResource <: ResourceManager
@@ -104,5 +106,10 @@ end
     # Perform operations with resources if needed
   end
 
-  @test resource_order == ["Acquired: Resource 1", "Acquired: Resource 2", "Released: Resource 2", "Released: Resource 1"]
+  @test resource_order == [
+    "Acquired: Resource 1",
+    "Acquired: Resource 2",
+    "Released: Resource 2",
+    "Released: Resource 1",
+  ]
 end
