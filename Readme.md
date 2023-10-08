@@ -7,7 +7,10 @@ Resource management in Julia, inspired by Python's `with` statement for resource
 - Compl Yue ([@complyue](https://github.com/complyue)), the designer.
 - ChatGPT by OpenAI, contributed to the coding and documentation.
 
+
+## Table of Contents
 - [Authors](#authors)
+- [Table of Contents](#table-of-contents)
 - [Background](#background)
   - [Unique Features Compared to Julia's `do` Syntax](#unique-features-compared-to-julias-do-syntax)
 - [Installation](#installation)
@@ -16,7 +19,6 @@ Resource management in Julia, inspired by Python's `with` statement for resource
   - [Implementing Your Own `ResourceManager`](#implementing-your-own-resourcemanager)
 - [Tests](#tests)
 - [License](#license)
-
 
 ## Background
 
