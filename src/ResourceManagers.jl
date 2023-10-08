@@ -1,7 +1,8 @@
 module ResourceManagers
 
 export @with, ResourceManager, __enter__, __exit__
-export ManagedFile, open_file
+
+export OpenFile
 
 
 """
@@ -126,45 +127,46 @@ end
 
 
 """
-    struct ManagedFile <: ResourceManager
+    struct OpenFile <: ResourceManager
 
 A type representing a managed file, conforming to the `ResourceManager` interface.
 """
-struct ManagedFile <: ResourceManager
+struct OpenFile <: ResourceManager
   filename::AbstractString
   mode::AbstractString
   lock::Bool
 
   file::Ref{IO}
+
+  """
+    OpenFile(filename::AbstractString, [mode::AbstractString]; lock = true)
+
+Wrap a (to be opened) file in an `OpenFile` object for resource management.
+"""
+  OpenFile(
+    filename::AbstractString, mode::AbstractString="r"; lock=true
+  ) = new(
+    filename, mode, lock, Ref{IO}()
+  )
 end
 
 """
-    __enter__(m::ManagedFile)
+    __enter__(m::OpenFile)
 
 Do open a file, as acquired resource.
 """
-function __enter__(m::ManagedFile)
+function __enter__(m::OpenFile)
   m.file[] = open(m.filename, m.mode; lock=m.lock)
   return m.file[]
 end
 
 """
-    __exit__(m::ManagedFile, exc::Union{Nothing,Exception})
+    __exit__(m::OpenFile, exc::Union{Nothing,Exception})
 
 Release a file resource by closing it.
 """
-function __exit__(m::ManagedFile, exc::Union{Nothing,Exception})
+function __exit__(m::OpenFile, exc::Union{Nothing,Exception})
   close(m.file[])
 end
-
-"""
-    open_file(filename::AbstractString, [mode::AbstractString]; lock = true)
-
-Wrap a (to be opened) file in a `ManagedFile` object for resource management.
-"""
-function open_file(filename::AbstractString, mode::AbstractString="r"; lock=true)
-  return ManagedFile(filename, mode, lock, Ref{IO}())
-end
-
 
 end # module ResourceManagers

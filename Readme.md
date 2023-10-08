@@ -18,8 +18,8 @@ The `@with` macro in this package is influenced by Python's `with` statement, wh
    ```julia
    # Using @with for multiple resources
    @with begin
-       open_file("file1.txt", "w"):f1
-       open_file("file2.txt", "w"):f2
+       OpenFile("file1.txt", "w") : f1
+       OpenFile("file2.txt", "w") : f2
    end begin
        write(f1, "Writing to file 1")
        write(f2, "Writing to file 2")
@@ -30,7 +30,7 @@ The `@with` macro in this package is influenced by Python's `with` statement, wh
 
    ```julia
    # Without naming
-   @with open_file("file.txt", "w") begin
+   @with OpenFile("file.txt", "w") begin
        # Do something
    end
    ```
@@ -47,12 +47,12 @@ To install ResourceManagers.jl, run the following command in your Julia REPL:
 
 ## Usage
 
-Here is a quick example using `ManagedFile` and `open_file` from this package:
+Here is a quick example using `OpenFile` from this package:
 
 ```julia
 using ResourceManagers
 
-@with open_file("file.txt", "w") : f begin
+@with OpenFile("file.txt", "w") : f begin
     write(f, "Hello, world!")
 end
 ```
@@ -65,8 +65,8 @@ For managing multiple resources:
 
 ```julia
 @with begin
-    open_file("file1.txt", "w"):f1
-    open_file("file2.txt", "w"):f2
+    OpenFile("file1.txt", "w"):f1
+    OpenFile("file2.txt", "w"):f2
 end begin
     write(f1, "Writing to file 1")
     write(f2, "Writing to file 2")
@@ -80,28 +80,30 @@ Implementing your own `ResourceManager` is straightforward:
 1. Define your custom type.
 2. Add methods for `__enter__` and `__exit__` that describe how to acquire and release the resource.
 
-Here's a quick example:
+This is exactly how the `OpenFile` is implemented by this package:
 
 ```julia
-struct MyManager
-  resource
+struct OpenFile <: ResourceManager
+  filename::AbstractString
+  mode::AbstractString
+  lock::Bool
+
+  file::Ref{IO}
+
+  OpenFile(
+    filename::AbstractString, mode::AbstractString="r"; lock=true
+  ) = new(
+    filename, mode, lock, Ref{IO}()
+  )
 end
 
-function __enter__(m::MyManager)
-  println("Acquiring resource")
-  return m.resource
+function __enter__(m::OpenFile)
+  m.file[] = open(m.filename, m.mode; lock=m.lock)
+  return m.file[]
 end
 
-function __exit__(m::MyManager, exc::Union{Nothing,Exception})
-  println("Releasing resource")
-end
-```
-
-To use your custom resource manager:
-
-```julia
-@with MyManager("some_resource") : r begin
-    println("Using resource: ", r)
+function __exit__(m::OpenFile, exc::Union{Nothing,Exception})
+  close(m.file[])
 end
 ```
 
