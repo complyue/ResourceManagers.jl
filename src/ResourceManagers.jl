@@ -49,7 +49,8 @@ macro with(pairs, block)
   resource_pairs = []
 
   if pairs.head == :block  # Multiple resources
-    for pair in filter(x -> isa(x, Expr), pairs.args)  # Only keep Expr objects
+    sizehint!(resource_pairs, length(pairs.args))
+    for pair in filter(x -> isa(x, Expr), pairs.args)
       if pair.head == :call && pair.args[1] == :(:)
         push!(resource_pairs, (pair.args[2], pair.args[3]))
       elseif pair.head == :symbol || pair.head == :call || pair.head == :macrocall
@@ -83,9 +84,9 @@ function generate_with_block(resource_pairs, block)
     return block
   end
 
-  (resource, as_var) = popfirst!(resource_pairs)
+  (resource, as_var) = resource_pairs[1]
   resource_var = gensym()  # Generate a unique symbol for the resource
-  inner_block = generate_with_block(resource_pairs, block)
+  inner_block = generate_with_block((@view resource_pairs[2:end]), block)
 
   if as_var === nothing
     return quote
