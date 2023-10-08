@@ -7,6 +7,17 @@ Resource management in Julia, inspired by Python's `with` statement for resource
 - Compl Yue ([@complyue](https://github.com/complyue)), the designer.
 - ChatGPT by OpenAI, contributed to the coding and documentation.
 
+- [Authors](#authors)
+- [Background](#background)
+  - [Unique Features Compared to Julia's `do` Syntax](#unique-features-compared-to-julias-do-syntax)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [More Examples](#more-examples)
+  - [Implementing Your Own `ResourceManager`](#implementing-your-own-resourcemanager)
+- [Tests](#tests)
+- [License](#license)
+
+
 ## Background
 
 The `@with` macro in this package is influenced by Python's `with` statement, which simplifies the management of resources such as file handlers, network connections, and other custom resources. While Julia has native resource management through the `do` syntax, the `@with` macro offers unique features:
@@ -30,7 +41,7 @@ The `@with` macro in this package is influenced by Python's `with` statement, wh
 
    ```julia
    # Without naming
-   @with OpenFile("file.txt", "w") begin
+   @with OpenFile("file.txt") begin
        # Do something
    end
    ```
@@ -65,8 +76,8 @@ For managing multiple resources:
 
 ```julia
 @with begin
-    OpenFile("file1.txt", "w"):f1
-    OpenFile("file2.txt", "w"):f2
+    OpenFile("file1.txt", "w") : f1
+    OpenFile("file2.txt", "w") : f2
 end begin
     write(f1, "Writing to file 1")
     write(f2, "Writing to file 2")
