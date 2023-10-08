@@ -3,6 +3,9 @@ uuid = "0ddfaa41-c5cc-4b1d-8f46-5fada6d10e03"
 authors = ["ComplYue <compl.yue@icloud.com>"]
 version = "0.1.0"
 
+[compat]
+julia = "1.6 - 2"
+
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
